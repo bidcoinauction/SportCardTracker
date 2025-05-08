@@ -31,8 +31,8 @@ const Dashboard = () => {
   // Sort cards by most recently added
   const recentCards = [...(cards || [])]
     .sort((a, b) => {
-      const dateA = new Date(a.addedDate).getTime();
-      const dateB = new Date(b.addedDate).getTime();
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
       return dateB - dateA;
     })
     .slice(0, 4);
@@ -104,7 +104,7 @@ const Dashboard = () => {
     },
     {
       title: "Total Value",
-      value: isStatsLoading ? "--" : `$${stats?.totalValue.toLocaleString() || 0}`,
+      value: isStatsLoading ? "--" : `$${((stats?.totalValue || 0).toLocaleString())}`,
       icon: <DollarSign className="text-accent text-2xl" />,
       iconBgColor: "bg-accent",
       change: {
@@ -114,7 +114,7 @@ const Dashboard = () => {
     },
     {
       title: "Most Valuable",
-      value: isStatsLoading ? "--" : `$${stats?.mostValuableCard?.estimatedValue.toLocaleString() || 0}`,
+      value: isStatsLoading ? "--" : `$${((stats?.mostValuableCard?.currentValue || 0).toLocaleString())}`,
       icon: <Trophy className="text-secondary text-2xl" />,
       iconBgColor: "bg-secondary",
       subtitle: isStatsLoading ? "" : stats?.mostValuableCard?.playerName || "No cards yet",

@@ -86,8 +86,8 @@ const CardDetail = () => {
   // Update value mutation
   const updateValueMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("PUT", `/api/cards/${cardId}`, {
-        estimatedValue: Number(newValue)
+      await apiRequest("PATCH", `/api/cards/${cardId}`, {
+        currentValue: Number(newValue)
       });
     },
     onSuccess: () => {
@@ -257,7 +257,7 @@ const CardDetail = () => {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-white">
-                    ${card.estimatedValue.toLocaleString()}
+                    ${(card.currentValue || 0).toLocaleString()}
                   </span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {formatCondition(card.condition)}
@@ -267,10 +267,12 @@ const CardDetail = () => {
                       {card.grade}
                     </span>
                   )}
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    <CalendarClock className="mr-1 h-3 w-3" />
-                    {new Date(card.addedDate).toLocaleDateString()}
-                  </span>
+                  {card.createdAt && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <CalendarClock className="mr-1 h-3 w-3" />
+                      {new Date(card.createdAt).toLocaleDateString()}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -332,11 +334,11 @@ const CardDetail = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Current Value</h3>
-                      <p className="mt-1 text-base font-medium text-green-600">${card.estimatedValue.toLocaleString()}</p>
+                      <p className="mt-1 text-base font-medium text-green-600">${(card.currentValue || 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Added to Collection</h3>
-                      <p className="mt-1 text-base font-medium text-gray-900">{new Date(card.addedDate).toLocaleDateString()}</p>
+                      <p className="mt-1 text-base font-medium text-gray-900">{card.createdAt ? new Date(card.createdAt).toLocaleDateString() : "Unknown"}</p>
                     </div>
                   </div>
                 </div>
@@ -386,7 +388,7 @@ const CardDetail = () => {
               step="0.01"
               value={newValue}
               onChange={(e) => setNewValue(e.target.value)}
-              placeholder={card.estimatedValue.toString()}
+              placeholder={(card.currentValue || 0).toString()}
             />
           </div>
           
