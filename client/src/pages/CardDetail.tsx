@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card } from "@shared/schema";
+import { getSportSpecificImage } from "@/lib/cardImages";
 import { useToast } from "@/hooks/use-toast";
 import { Card as CardUI } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -225,28 +226,16 @@ const CardDetail = () => {
           <div className="p-4">
             <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center">
               <img 
-                src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"} 
+                src={card.frontImageUrl || getSportSpecificImage(card.sport, card.playerName, card.year?.toString())} 
                 alt={`${card.playerName} card front`}
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  // Store the element reference before async operations
-                  const imgElement = e.currentTarget;
-                  if (!imgElement) return;
-                  
                   // Prevent infinite loop
-                  imgElement.onerror = null;
+                  e.currentTarget.onerror = null;
                   
                   try {
-                    // Set a fallback immediately
-                    imgElement.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
-                    
-                    // Try to load sport-specific image asynchronously
-                    import('@/lib/cardImages').then(({ getSportSpecificImage }) => {
-                      const sportImage = getSportSpecificImage(card.sport);
-                      if (sportImage && imgElement) {
-                        imgElement.src = sportImage;
-                      }
-                    });
+                    // Use our SVG generator for fallback
+                    e.currentTarget.src = getSportSpecificImage(card.sport, card.playerName, card.year?.toString());
                   } catch (error) {
                     console.error("Error setting fallback image:", error);
                   }
@@ -255,20 +244,16 @@ const CardDetail = () => {
             </div>
             <div className="mt-4 aspect-[3/4] rounded-lg overflow-hidden bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center">
               <img 
-                src={card.backImageUrl || "https://via.placeholder.com/300x400?text=No+Back+Image"} 
+                src={card.backImageUrl || getSportSpecificImage(card.sport, `${card.playerName} (Back)`, card.year?.toString())} 
                 alt={`${card.playerName} card back`}
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  // Store the element reference before async operations
-                  const imgElement = e.currentTarget;
-                  if (!imgElement) return;
-                  
                   // Prevent infinite loop
-                  imgElement.onerror = null;
+                  e.currentTarget.onerror = null;
                   
                   try {
-                    // Set a fallback immediately
-                    imgElement.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent('Card Back')}`;
+                    // Use our SVG generator for fallback
+                    e.currentTarget.src = getSportSpecificImage(card.sport, `${card.playerName} (Back)`, card.year?.toString());
                   } catch (error) {
                     console.error("Error setting fallback image:", error);
                   }
