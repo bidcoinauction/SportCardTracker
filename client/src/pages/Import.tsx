@@ -109,136 +109,136 @@ export default function Import() {
               Select a CSV or Excel file containing your card collection.
             </CardDescription>
           </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="file">File</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    accept=".csv,.xlsx,.xls"
-                    onChange={handleFileChange}
-                    disabled={uploading}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Accepted formats: CSV, Excel (.xlsx, .xls)
-                  </p>
-                </div>
+          <CardContent>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="file">File</Label>
+                <Input
+                  id="file"
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Accepted formats: CSV, Excel (.xlsx, .xls)
+                </p>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => navigate("/collection")}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleUpload}
-                disabled={!file || uploading}
-              >
-                {uploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import Cards
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={() => navigate("/collection")}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={!file || uploading}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import Cards
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>File Format</CardTitle>
+            <CardDescription>
+              Your CSV or Excel file should contain these column headers:
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-1 text-sm">
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">playerName</span> - Name of the player
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">sport</span> - Sport (soccer, basketball, etc.)
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">year</span> - Year of the card
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">brand</span> - Brand of the card (Topps, Panini, etc.)
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">cardSet</span> - Card set or series
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">condition</span> - Condition of the card
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">purchasePrice</span> - Purchase price
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">currentValue</span> - Current value
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">notes</span> - Additional notes
+              </div>
+              <div className="flex items-center py-1">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                <span className="font-medium">cardNumber</span> - Card number
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {results && (
+        <div className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>File Format</CardTitle>
+              <CardTitle>Import Results</CardTitle>
               <CardDescription>
-                Your CSV or Excel file should contain these column headers:
+                {results.message}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-1 text-sm">
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">playerName</span> - Name of the player
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">sport</span> - Sport (soccer, basketball, etc.)
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">year</span> - Year of the card
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">brand</span> - Brand of the card (Topps, Panini, etc.)
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">cardSet</span> - Card set or series
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">condition</span> - Condition of the card
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">purchasePrice</span> - Purchase price
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">currentValue</span> - Current value
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">notes</span> - Additional notes
-                </div>
-                <div className="flex items-center py-1">
-                  <Check className="mr-2 h-4 w-4 text-green-500" />
-                  <span className="font-medium">cardNumber</span> - Card number
+              <div className="grid gap-4">
+                {results.results.filter((r: any) => !r.success).length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Failed to import some cards</AlertTitle>
+                    <AlertDescription>
+                      {results.results.filter((r: any) => !r.success).length} cards could not be imported.
+                      Check the format of your file and try again.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    onClick={handleViewCollection}
+                    variant="default"
+                  >
+                    View Collection
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {results && (
-          <div className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Import Results</CardTitle>
-                <CardDescription>
-                  {results.message}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  {results.results.filter((r: any) => !r.success).length > 0 && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Failed to import some cards</AlertTitle>
-                      <AlertDescription>
-                        {results.results.filter((r: any) => !r.success).length} cards could not be imported.
-                        Check the format of your file and try again.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      onClick={handleViewCollection}
-                      variant="default"
-                    >
-                      View Collection
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+      )}
     </div>
   );
 }
