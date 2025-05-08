@@ -92,8 +92,29 @@ export default function CsvImporter({ open, onOpenChange, onSuccess }: CsvImport
       return;
     }
 
+    // Define column mapping based on the exact headers in the user's "Full Card Inventory" CSV file
+    const columnMap = {
+      playerName: "Player Name",
+      sport: "Sport",
+      year: "Season", // Convert season like "2023-2024" to just year
+      brand: "Brand",
+      cardSet: "Card Set",
+      cardNumber: "Card Number",  
+      condition: "Condition",
+      team: "Team ", // Note the space at the end matches the CSV header
+      notes: "Features",
+      frontImageUrl: "IMAGE URL", // The pipe-separated image URLs will be handled server-side
+      backImageUrl: "IMAGE URL",
+      // Additional fields that are available in the CSV but not directly mapped
+      cardName: "Card Name", // Useful for notes if player name is missing
+      league: "League"       // Additional context
+    };
+
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('columnMap', JSON.stringify(columnMap));
+    
+    console.log("Importing with column map:", columnMap);
     importMutation.mutate(formData);
   };
 
@@ -107,6 +128,35 @@ export default function CsvImporter({ open, onOpenChange, onSuccess }: CsvImport
 
   return (
     <div className="space-y-4">
+      {/* Information alert about expected format */}
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+        <div className="flex">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <h3 className="text-sm font-medium text-blue-800">CSV Format Information</h3>
+            <div className="mt-1 text-sm text-blue-700">
+              <p>Your CSV file should match this format:</p>
+              <ul className="list-disc ml-5 mt-1 space-y-1">
+                <li><strong>Card Name</strong>: Full card name/title</li>
+                <li><strong>Player Name</strong>: The athlete's name</li>
+                <li><strong>Sport</strong>: Soccer, Basketball, etc.</li>
+                <li><strong>Card Number</strong>: The card's number in the set</li>
+                <li><strong>Features</strong>: Special features (e.g., "Refractor")</li>
+                <li><strong>IMAGE URL</strong>: Front and back images URLs separated by a pipe character (|)</li>
+                <li><strong>League</strong>: Sports league (e.g., "MLS")</li>
+                <li><strong>Team</strong>: Team name</li>
+                <li><strong>Season</strong>: Year or season range (e.g., "2023-2024")</li>
+                <li><strong>Condition</strong>: Card condition</li>
+                <li><strong>Brand</strong>: Card manufacturer (e.g., "Topps")</li>
+                <li><strong>Card Set</strong>: The specific set name</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid w-full items-center gap-1.5">
         <Label htmlFor="csv-import">Upload CSV or Excel File</Label>
         <div className="flex items-center gap-2">
