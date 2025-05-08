@@ -1,3 +1,4 @@
+import React from "react";
 import { Card } from "@shared/schema";
 import { formatDistance } from "date-fns";
 import { 
@@ -10,7 +11,9 @@ import {
   Beaker, 
   CableCar, 
   Goal, 
-  HelpCircle 
+  HelpCircle,
+  Search,
+  ListFilter 
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -25,13 +28,23 @@ import { getSportSpecificImage, getRandomCardImage } from "@/lib/cardImages";
 
 type CardItemProps = {
   card: Card;
-  onEdit?: (card: Card) => void;
-  onView?: (card: Card) => void;
-  onDelete?: (card: Card) => void;
-  onUpdateValue?: (card: Card) => void;
+  viewMode?: "grid" | "list";
+  onEdit?: () => void;
+  onView?: () => void;
+  onDelete?: () => void;
+  onUpdateValue?: () => void;
+  onResearch?: () => void;
 };
 
-const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemProps) => {
+const CardItem = ({ 
+  card, 
+  viewMode = "grid", 
+  onEdit, 
+  onView, 
+  onDelete, 
+  onUpdateValue,
+  onResearch 
+}: CardItemProps) => {
   const getSportIcon = (sport: string) => {
     switch (sport.toLowerCase()) {
       case "basketball":
@@ -96,6 +109,91 @@ const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemPro
     }
   };
 
+  if (viewMode === "list") {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300 flex">
+        <div className="relative w-24 h-24 flex-shrink-0">
+          <img
+            src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"}
+            alt={`${card.playerName} ${card.sport} Card`}
+            className="w-24 h-24 object-cover"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              const sportImage = getSportSpecificImage(card.sport);
+              if (sportImage) {
+                e.currentTarget.src = sportImage;
+              } else {
+                e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Sports Card')}`;
+              }
+            }}
+          />
+          <div className={cn("absolute top-1 left-1 rounded-full p-1 scale-75", getSportColor(card.sport))}>
+            {getSportIcon(card.sport)}
+          </div>
+        </div>
+        
+        <div className="flex-grow flex flex-col justify-between p-3">
+          <div>
+            <div className="flex justify-between items-start">
+              <h4 className="font-bold text-gray-800 text-sm">{card.playerName}</h4>
+              <div className="bg-accent text-white rounded-full px-2 py-0.5 text-xs font-medium">
+                ${typeof card.currentValue === 'number' ? card.currentValue.toLocaleString() : card.currentValue || 0}
+              </div>
+            </div>
+            <p className="text-xs text-gray-600 mb-1">
+              {card.team || "N/A"} · {card.year || "N/A"} {card.brand ? (card.cardSet ? `${card.brand} ${card.cardSet}` : card.brand) : ""}
+            </p>
+            <div className="flex items-center text-xs space-x-1">
+              <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
+                {getConditionLabel(card.condition)}
+              </span>
+              {card.cardNumber && (
+                <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
+                  #{card.cardNumber}
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center mt-2">
+            <div className="text-xs text-gray-500">
+              {card.createdAt ? getTimeAgo(card.createdAt) : "Recently added"}
+            </div>
+            <div className="flex space-x-1">
+              {onEdit && (
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onEdit} title="Edit card">
+                  <Edit className="h-3 w-3" />
+                </Button>
+              )}
+              {onResearch && (
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onResearch} title="Research price">
+                  <Search className="h-3 w-3" />
+                </Button>
+              )}
+              {!onView ? (
+                <Link href={`/card/${card.id}`}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="View details">
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onView} title="View details">
+                  <Eye className="h-3 w-3" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-error" onClick={onDelete} title="Delete card">
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Grid view (default)
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
@@ -150,32 +248,38 @@ const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemPro
       </div>
       <div className="border-t border-gray-100 px-4 py-2 flex justify-between">
         {onEdit && (
-          <Button variant="ghost" size="icon" onClick={() => onEdit(card)}>
+          <Button variant="ghost" size="icon" onClick={onEdit} title="Edit card">
             <Edit className="h-4 w-4" />
           </Button>
         )}
         
         {!onView ? (
           <Link href={`/card/${card.id}`}>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" title="View details">
               <Eye className="h-4 w-4" />
             </Button>
           </Link>
         ) : (
-          <Button variant="ghost" size="icon" onClick={() => onView(card)}>
+          <Button variant="ghost" size="icon" onClick={onView} title="View details">
             <Eye className="h-4 w-4" />
           </Button>
         )}
         
-        {onDelete && (
-          <Button variant="ghost" size="icon" className="text-error" onClick={() => onDelete(card)}>
-            <Trash2 className="h-4 w-4" />
+        {onResearch && (
+          <Button variant="ghost" size="icon" onClick={onResearch} title="Research price">
+            <Search className="h-4 w-4" />
           </Button>
         )}
         
         {onUpdateValue && (
-          <Button variant="ghost" size="icon" onClick={() => onUpdateValue(card)}>
+          <Button variant="ghost" size="icon" onClick={onUpdateValue} title="Update value">
             <Tag className="h-4 w-4" />
+          </Button>
+        )}
+        
+        {onDelete && (
+          <Button variant="ghost" size="icon" className="text-error" onClick={onDelete} title="Delete card">
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </div>

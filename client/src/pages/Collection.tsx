@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
 import { Card } from "@shared/schema";
@@ -26,7 +26,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, Loader2, Plus, Tag, Search } from "lucide-react";
+import { 
+  ArrowLeftRight, 
+  Loader2, 
+  Plus, 
+  Tag, 
+  Search, 
+  LayoutGrid, 
+  List 
+} from "lucide-react";
+import {
+  ToggleGroup,
+  ToggleGroupItem
+} from "@/components/ui/toggle-group";
 import AddEditCardModal from "@/components/AddEditCardModal";
 import PriceResearchModal from "@/components/PriceResearchModal";
 
@@ -39,6 +51,7 @@ const Collection = () => {
   const [sportFilter, setSportFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [deleteCardId, setDeleteCardId] = useState<number | null>(null);
   const [valueCardId, setValueCardId] = useState<number | null>(null);
   const [newValue, setNewValue] = useState("");
@@ -73,8 +86,9 @@ const Collection = () => {
   const filteredCards = allCards.filter(card => {
     // Search filter
     if (searchTerm && !card.playerName.toLowerCase().includes(searchTerm.toLowerCase()) && 
-        !card.team.toLowerCase().includes(searchTerm.toLowerCase()) && 
-        !card.brandSet.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !card.team?.toLowerCase().includes(searchTerm.toLowerCase()) && 
+        !(card.brand && card.brand.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        !(card.cardSet && card.cardSet.toLowerCase().includes(searchTerm.toLowerCase())) &&
         !String(card.year).includes(searchTerm)) {
       return false;
     }
@@ -110,18 +124,18 @@ const Collection = () => {
   }).sort((a, b) => {
     switch (sortBy) {
       case "value-high-to-low":
-        return Number(b.estimatedValue) - Number(a.estimatedValue);
+        return Number(b.currentValue) - Number(a.currentValue);
       case "value-low-to-high":
-        return Number(a.estimatedValue) - Number(b.estimatedValue);
+        return Number(a.currentValue) - Number(b.currentValue);
       case "alphabetical":
         return a.playerName.localeCompare(b.playerName);
       case "newest":
-        return new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime();
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       case "oldest":
-        return new Date(a.addedDate).getTime() - new Date(b.addedDate).getTime();
+        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
       case "recent":
       default:
-        return new Date(b.addedDate).getTime() - new Date(a.addedDate).getTime();
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     }
   });
 
