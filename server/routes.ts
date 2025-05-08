@@ -8,6 +8,8 @@ import path from "path";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { insertCardSchema, cardFormSchema } from "@shared/schema";
+import { parse as csvParse } from "csv-parse";
+import * as XLSX from "xlsx";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -171,6 +173,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).end();
     } catch (err) {
       handleError(err, res);
+    }
+  });
+
+  // Configure multer for CSV/Excel uploads
+  const csvUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB max file size
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimeTypes = ["text/csv", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        return cb(null, true);
+      }
+      cb(new Error("Invalid file type. Only CSV and Excel files are allowed."));
+    },
+  });
+
+  // Import cards from CSV/Excel
+  app.post("/api/import", csvUpload.single("file"), async (req: Request, res: Response) => {
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const { buffer, mimetype } = file;
+      const { columnMap } = req.body;
+      
+      let mappedColumns: Record<string, string>;
+      try {
+        mappedColumns = JSON.parse(columnMap);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid column mapping" });
+      }
+      
+      let records: any[] = [];
+      
+      // Parse CSV or Excel file
+      if (mimetype === "text/csv") {
+        const csvContent = buffer.toString("utf-8");
+        
+        // Parse CSV data
+        const parsedCsv: any[] = await new Promise((resolve, reject) => {
+          csvParse(csvContent, { columns: true, trim: true }, (err, output) => {
+            if (err) return reject(err);
+            resolve(output);
+          });
+        });
+        
+        records = parsedCsv;
+      } else {
+        // Parse Excel data
+        const workbook = XLSX.read(buffer);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        records = XLSX.utils.sheet_to_json(worksheet);
+      }
+      
+      // Map the records based on the provided column mapping
+      const cardRecords = records.map(record => {
+        const mappedRecord: any = {};
+        
+        for (const [cardField, fileField] of Object.entries(mappedColumns)) {
+          if (fileField && fileField !== "none" && record[fileField] !== undefined) {
+            mappedRecord[cardField] = record[fileField];
+          }
+        }
+        
+        // Convert numerical values
+        if (mappedRecord.year) {
+          mappedRecord.year = parseInt(mappedRecord.year);
+        }
+        
+        if (mappedRecord.purchasePrice) {
+          mappedRecord.purchasePrice = parseFloat(mappedRecord.purchasePrice);
+        }
+        
+        if (mappedRecord.currentValue) {
+          mappedRecord.currentValue = parseFloat(mappedRecord.currentValue);
+        }
+        
+        return mappedRecord;
+      });
+      
+      // Validate and insert each card
+      const results = await Promise.all(
+        cardRecords.map(async (record) => {
+          try {
+            const validationResult = insertCardSchema.safeParse(record);
+            
+            if (!validationResult.success) {
+              return {
+                success: false,
+                error: `Validation error: ${record.playerName || "Unknown"} - ${fromZodError(validationResult.error).message}`,
+                data: record,
+              };
+            }
+            
+            const card = await storage.createCard(validationResult.data);
+            return { success: true, data: card };
+          } catch (error) {
+            return {
+              success: false,
+              error: `Error processing record: ${record.playerName || "Unknown"}`,
+              data: record,
+            };
+          }
+        })
+      );
+      
+      // Count successes and failures
+      const successful = results.filter(r => r.success).length;
+      const failed = results.filter(r => !r.success).length;
+      
+      res.json({
+        message: `Import completed: ${successful} cards imported, ${failed} failed`,
+        results: results,
+      });
+    } catch (error) {
+      console.error("Error importing cards:", error);
+      res.status(500).json({ message: "Failed to import cards" });
     }
   });
 
