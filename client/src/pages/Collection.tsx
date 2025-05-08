@@ -201,7 +201,7 @@ const Collection = () => {
 
   const updateCardValue = (card: Card) => {
     setValueCardId(card.id);
-    setNewValue(card.estimatedValue.toString());
+    setNewValue(card.currentValue?.toString() || "0");
   };
 
   const submitValueUpdate = async () => {
@@ -209,8 +209,8 @@ const Collection = () => {
     
     try {
       setIsUpdatingValue(true);
-      await apiRequest("PUT", `/api/cards/${valueCardId}`, {
-        estimatedValue: Number(newValue)
+      await apiRequest("PATCH", `/api/cards/${valueCardId}`, {
+        currentValue: Number(newValue)
       });
       
       toast({
@@ -254,8 +254,20 @@ const Collection = () => {
         }}
       />
 
-      {/* Add New Card Button */}
-      <div className="flex justify-end mb-4">
+      {/* Actions Bar with Add New Card Button and View Toggle */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-500">View:</span>
+          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as "grid" | "list")}>
+            <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" aria-label="List view" title="List view">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
         <Button 
           onClick={() => {
             setEditingCard(null);
@@ -268,16 +280,16 @@ const Collection = () => {
         </Button>
       </div>
       
-      {/* Card Grid */}
+      {/* Card Grid/List */}
       <CardGrid 
         cards={filteredCards}
         isLoading={isLoading}
+        viewMode={viewMode}
         onEdit={handleEditCard}
         onView={handleViewCard}
         onDelete={confirmDeleteCard}
         onUpdateValue={updateCardValue}
         onResearch={handlePriceResearch}
-        viewMode="grid"
       />
 
       {/* Delete Confirmation Dialog */}
