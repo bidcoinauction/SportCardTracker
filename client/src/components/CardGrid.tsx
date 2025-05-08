@@ -5,19 +5,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 type CardGridProps = {
   cards: Card[];
   isLoading?: boolean;
+  viewMode?: "grid" | "list";
   onEdit?: (card: Card) => void;
   onView?: (card: Card) => void;
   onDelete?: (card: Card) => void;
   onUpdateValue?: (card: Card) => void;
+  onResearch?: (card: Card) => void;
 };
 
 const CardGrid = ({
   cards,
   isLoading = false,
+  viewMode = "grid",
   onEdit,
   onView,
   onDelete,
   onUpdateValue,
+  onResearch,
 }: CardGridProps) => {
   if (isLoading) {
     return (
@@ -61,15 +65,17 @@ const CardGrid = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className={`grid grid-cols-1 ${viewMode === "grid" ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : ""} gap-4`}>
       {cards.map((card) => (
         <CardItem
           key={card.id}
           card={card}
-          onEdit={onEdit}
-          onView={onView}
-          onDelete={onDelete}
-          onUpdateValue={onUpdateValue}
+          viewMode={viewMode}
+          onEdit={onEdit ? () => onEdit(card) : undefined}
+          onView={onView ? () => onView(card) : undefined}
+          onDelete={onDelete ? () => onDelete(card) : undefined}
+          onUpdateValue={onUpdateValue ? () => onUpdateValue(card) : undefined}
+          onResearch={onResearch ? () => onResearch(card) : undefined}
         />
       ))}
     </div>

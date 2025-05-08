@@ -26,7 +26,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { ArrowLeftRight, Loader2, Plus, Tag, Search } from "lucide-react";
+import AddEditCardModal from "@/components/AddEditCardModal";
+import PriceResearchModal from "@/components/PriceResearchModal";
 
 const Collection = () => {
   const [, navigate] = useLocation();
@@ -41,6 +43,12 @@ const Collection = () => {
   const [valueCardId, setValueCardId] = useState<number | null>(null);
   const [newValue, setNewValue] = useState("");
   const [isUpdatingValue, setIsUpdatingValue] = useState(false);
+  
+  // New modal states
+  const [addEditModalOpen, setAddEditModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const [priceResearchModalOpen, setPriceResearchModalOpen] = useState(false);
+  const [researchCard, setResearchCard] = useState<Card | null>(null);
 
   const { data: allCards = [], isLoading } = useQuery<Card[]>({
     queryKey: ["/api/cards"],
@@ -137,7 +145,8 @@ const Collection = () => {
 
   // Handle card actions
   const handleEditCard = (card: Card) => {
-    navigate(`/add-card?edit=${card.id}`);
+    setEditingCard(card);
+    setAddEditModalOpen(true);
   };
 
   const handleViewCard = (card: Card) => {
@@ -146,6 +155,11 @@ const Collection = () => {
 
   const confirmDeleteCard = (card: Card) => {
     setDeleteCardId(card.id);
+  };
+  
+  const handlePriceResearch = (card: Card) => {
+    setResearchCard(card);
+    setPriceResearchModalOpen(true);
   };
 
   const deleteCard = async () => {
@@ -226,6 +240,20 @@ const Collection = () => {
         }}
       />
 
+      {/* Add New Card Button */}
+      <div className="flex justify-end mb-4">
+        <Button 
+          onClick={() => {
+            setEditingCard(null);
+            setAddEditModalOpen(true);
+          }}
+          className="gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add New Card
+        </Button>
+      </div>
+      
       {/* Card Grid */}
       <CardGrid 
         cards={filteredCards}
@@ -234,6 +262,8 @@ const Collection = () => {
         onView={handleViewCard}
         onDelete={confirmDeleteCard}
         onUpdateValue={updateCardValue}
+        onResearch={handlePriceResearch}
+        viewMode="grid"
       />
 
       {/* Delete Confirmation Dialog */}
@@ -297,6 +327,30 @@ const Collection = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Add/Edit Card Modal */}
+      <AddEditCardModal
+        open={addEditModalOpen}
+        onOpenChange={setAddEditModalOpen}
+        card={editingCard}
+        onSuccess={() => {
+          setAddEditModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["/api/cards"] });
+          toast({
+            title: editingCard ? "Card Updated" : "Card Added",
+            description: editingCard
+              ? "The card has been updated successfully."
+              : "The new card has been added to your collection.",
+          });
+        }}
+      />
+      
+      {/* Price Research Modal */}
+      <PriceResearchModal
+        open={priceResearchModalOpen}
+        onOpenChange={setPriceResearchModalOpen}
+        card={researchCard}
+      />
     </div>
   );
 };
