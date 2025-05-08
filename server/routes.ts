@@ -250,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Filter out empty rows or rows without essential data
       records = records.filter(record => {
-        return record["Player Name"] && record["Sport"] && 
+        return (record["Player Name"] || record["Card Name"]) && 
                (record["IMAGE URL"] !== undefined || record["Card Number"] !== undefined);
       });
       
@@ -260,24 +260,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cardRecords = records.map(record => {
         const mappedRecord: any = {};
         
-        for (const [cardField, fileField] of Object.entries(mappedColumns)) {
-          if (fileField && fileField !== "none" && record[fileField] !== undefined) {
-            // Special handling for IMAGE URL which may contain both front and back URLs
-            if (cardField === "frontImageUrl" && record[fileField]) {
-              const imageUrls = record[fileField].toString().split('|');
-              if (imageUrls.length > 0) {
-                mappedRecord[cardField] = imageUrls[0].trim();
-              }
-            } 
-            else if (cardField === "backImageUrl" && record[fileField]) {
-              const imageUrls = record[fileField].toString().split('|');
-              if (imageUrls.length > 1) {
-                mappedRecord[cardField] = imageUrls[1].trim();
-              }
-            }
-            else {
-              mappedRecord[cardField] = record[fileField];
-            }
+        // Ensure we have a player name - prefer Player Name field, fallback to Card Name
+        if (record["Player Name"]) {
+          mappedRecord.playerName = record["Player Name"];
+        } else if (record["Card Name"]) {
+          // Extract player name from card name if no player name exists
+          const cardName = record["Card Name"].toString();
+          // Look for a name pattern in the card name
+          const nameMatch = cardName.match(/(?:.*?)([A-Z][a-z]+ [A-Z][a-z]+)/);
+          if (nameMatch && nameMatch[1]) {
+            mappedRecord.playerName = nameMatch[1];
+          } else {
+            // Fallback: just use the card name
+            mappedRecord.playerName = cardName;
+          }
+        }
+        
+        // Direct mapping of standard fields
+        mappedRecord.sport = record["Sport"] ? record["Sport"].toLowerCase() : "soccer";
+        mappedRecord.team = record["Team"] || null;
+        mappedRecord.brand = record["Brand"] || null;
+        mappedRecord.cardSet = record["Card Set"] || null;
+        mappedRecord.cardNumber = record["Card Number"] || null;
+        mappedRecord.condition = record["Condition"] ? record["Condition"].toLowerCase() : "new";
+        mappedRecord.notes = record["Features"] || null;
+        
+        // Handle image URLs - properly split the pipe-separated values
+        if (record["IMAGE URL"]) {
+          const imageUrl = record["IMAGE URL"].toString();
+          const imageUrls = imageUrl.split('|').map(url => url.trim());
+          
+          if (imageUrls.length > 0 && imageUrls[0]) {
+            mappedRecord.frontImageUrl = imageUrls[0];
+          }
+          
+          if (imageUrls.length > 1 && imageUrls[1]) {
+            mappedRecord.backImageUrl = imageUrls[1];
           }
         }
         
@@ -291,17 +309,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } else {
           mappedRecord.year = new Date().getFullYear(); // Default to current year if missing
-        }
-        
-        // Set default values for required fields if missing
-        if (!mappedRecord.playerName && record["Card Name"]) {
-          // Extract player name from card name if possible
-          const nameParts = record["Card Name"].toString().split(' ');
-          if (nameParts.length >= 2) {
-            mappedRecord.playerName = nameParts.slice(0, 2).join(' ');
-          } else {
-            mappedRecord.playerName = record["Card Name"];
-          }
         }
         
         if (!mappedRecord.sport) {

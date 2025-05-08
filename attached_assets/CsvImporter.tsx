@@ -61,7 +61,8 @@ export default function CsvImporter({ open, onOpenChange, onSuccess }: CsvImport
         cardSet: ['set', 'card set', 'series', 'collection', 'card_set', 'features'],
         cardNumber: ['number', 'card number', 'card #', 'card_number', 'id', 'card number'],
         notes: ['card name', 'notes', 'description', 'comment', 'comments', 'team', 'league'],
-        imageUrl: ['image', 'image url', 'image_url', 'pic', 'picture', 'photo', 'pic url', 'picurl', 'image link', 'image url']
+        frontImageUrl: ['image', 'image url', 'image_url', 'pic', 'picture', 'photo', 'pic url', 'picurl', 'image link', 'front image', 'front image url', 'IMAGE URL'],
+        backImageUrl: ['back image', 'back image url', 'back pic', 'back photo', 'IMAGE URL']
       };
       
       // Try to map headers automatically
