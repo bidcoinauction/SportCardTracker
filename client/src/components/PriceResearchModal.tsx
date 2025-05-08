@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Card } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -88,7 +89,7 @@ export default function PriceResearchModal({
       
       setIsSearching(true);
       try {
-        const response = await fetch(`/api/prices?q=${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(`/api/prices?query=${encodeURIComponent(searchQuery)}`);
         if (!response.ok) {
           throw new Error("Failed to fetch price data");
         }

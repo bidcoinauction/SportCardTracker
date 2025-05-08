@@ -229,23 +229,27 @@ const CardDetail = () => {
                 alt={`${card.playerName} card front`}
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  e.currentTarget.onerror = null;
+                  // Store the element reference before async operations
+                  const imgElement = e.currentTarget;
+                  if (!imgElement) return;
                   
-                  // Import the getSportSpecificImage function
-                  import('@/lib/cardImages').then(({ getSportSpecificImage }) => {
-                    // Try to get a sport-specific image
-                    const sportImage = getSportSpecificImage(card.sport);
+                  // Prevent infinite loop
+                  imgElement.onerror = null;
+                  
+                  try {
+                    // Set a fallback immediately
+                    imgElement.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
                     
-                    if (sportImage) {
-                      e.currentTarget.src = sportImage;
-                    } else {
-                      // Fall back to a placeholder with the player name
-                      e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
-                    }
-                  }).catch(() => {
-                    // If module import fails, use generic placeholder
-                    e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
-                  });
+                    // Try to load sport-specific image asynchronously
+                    import('@/lib/cardImages').then(({ getSportSpecificImage }) => {
+                      const sportImage = getSportSpecificImage(card.sport);
+                      if (sportImage && imgElement) {
+                        imgElement.src = sportImage;
+                      }
+                    });
+                  } catch (error) {
+                    console.error("Error setting fallback image:", error);
+                  }
                 }}
               />
             </div>
@@ -255,8 +259,19 @@ const CardDetail = () => {
                 alt={`${card.playerName} card back`}
                 className="w-full h-full object-contain"
                 onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent('Card Back')}`;
+                  // Store the element reference before async operations
+                  const imgElement = e.currentTarget;
+                  if (!imgElement) return;
+                  
+                  // Prevent infinite loop
+                  imgElement.onerror = null;
+                  
+                  try {
+                    // Set a fallback immediately
+                    imgElement.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent('Card Back')}`;
+                  } catch (error) {
+                    console.error("Error setting fallback image:", error);
+                  }
                 }}
               />
             </div>
