@@ -285,7 +285,7 @@ const CardDetail = () => {
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">{card.playerName}</h1>
                 <div className="flex items-center text-gray-600">
-                  <span>{card.year} {card.brandSet}</span>
+                  <span>{card.year} {card.brand} {card.cardSet}</span>
                   <span className="mx-2">•</span>
                   <span>{card.team}</span>
                   <span className="mx-2">•</span>
@@ -298,9 +298,9 @@ const CardDetail = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {formatCondition(card.condition)}
                   </span>
-                  {card.grade && (
+                  {card.gradeValue && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {card.grade}
+                      {card.gradeValue}
                     </span>
                   )}
                   {card.createdAt && (
@@ -354,7 +354,9 @@ const CardDetail = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Brand/Set</h3>
-                      <p className="mt-1 text-base font-medium text-gray-900">{card.brandSet}</p>
+                      <p className="mt-1 text-base font-medium text-gray-900">
+                        {card.brand ? (card.cardSet ? `${card.brand} ${card.cardSet}` : card.brand) : "-"}
+                      </p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Card Number</h3>
@@ -366,7 +368,7 @@ const CardDetail = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Grade</h3>
-                      <p className="mt-1 text-base font-medium text-gray-900">{card.grade || "Raw (Ungraded)"}</p>
+                      <p className="mt-1 text-base font-medium text-gray-900">{card.gradeValue || "Raw (Ungraded)"}</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Current Value</h3>
