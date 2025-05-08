@@ -46,7 +46,7 @@ import {
 
 const CardDetail = () => {
   const { id } = useParams();
-  const cardId = parseInt(id);
+  const cardId = id ? parseInt(id) : 0;
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -199,9 +199,9 @@ const CardDetail = () => {
     <div className="p-6">
       {/* Back button and actions */}
       <div className="flex justify-between items-center mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)}>
+        <Button variant="ghost" onClick={() => navigate("/collection")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Back to Collection
         </Button>
         <div className="space-x-2">
           <Button variant="outline" onClick={() => setValueDialogOpen(true)}>
@@ -283,11 +283,7 @@ const CardDetail = () => {
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {formatCondition(card.condition)}
                   </span>
-                  {card.gradeValue && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {card.gradeValue}
-                    </span>
-                  )}
+                  {/* Grade badges are displayed here if available */}
                   {card.createdAt && (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                       <CalendarClock className="mr-1 h-3 w-3" />
@@ -353,7 +349,7 @@ const CardDetail = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Grade</h3>
-                      <p className="mt-1 text-base font-medium text-gray-900">{card.gradeValue || "Raw (Ungraded)"}</p>
+                      <p className="mt-1 text-base font-medium text-gray-900">Raw (Ungraded)</p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">Current Value</h3>
