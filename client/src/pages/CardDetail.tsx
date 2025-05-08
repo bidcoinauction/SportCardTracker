@@ -223,22 +223,28 @@ const CardDetail = () => {
         {/* Card image */}
         <CardUI className="md:col-span-1">
           <div className="p-4">
-            <div className="aspect-[3/4] rounded-lg overflow-hidden">
+            <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center">
               <img 
                 src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"} 
                 alt={`${card.playerName} card front`}
                 className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
+                }}
               />
             </div>
-            {card.backImageUrl && (
-              <div className="mt-4 aspect-[3/4] rounded-lg overflow-hidden">
-                <img 
-                  src={card.backImageUrl} 
-                  alt={`${card.playerName} card back`}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+            <div className="mt-4 aspect-[3/4] rounded-lg overflow-hidden bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center">
+              <img 
+                src={card.backImageUrl || "https://via.placeholder.com/300x400?text=No+Back+Image"} 
+                alt={`${card.playerName} card back`}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent('Card Back')}`;
+                }}
+              />
+            </div>
           </div>
         </CardUI>
 

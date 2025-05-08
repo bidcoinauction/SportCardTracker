@@ -98,11 +98,18 @@ const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemPro
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
-        <img
-          src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"}
-          alt={`${card.playerName} ${card.sport} Card`}
-          className="w-full h-48 object-cover"
-        />
+        <div className="w-full h-48 bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center">
+          <img
+            src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"}
+            alt={`${card.playerName} ${card.sport} Card`}
+            className="w-full h-48 object-cover"
+            onError={(e) => {
+              // If image fails to load, replace with a generated card-like placeholder
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Sports Card')}`;
+            }}
+          />
+        </div>
         <div className="absolute top-2 right-2 bg-accent text-white rounded-full px-2 py-1 text-xs font-medium">
           ${typeof card.currentValue === 'number' ? card.currentValue.toLocaleString() : card.currentValue || 0}
         </div>
