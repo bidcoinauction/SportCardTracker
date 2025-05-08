@@ -8,6 +8,7 @@ import { Card as CardUI } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ValueChart } from "@/components/Charts";
+import { LastSoldPrices } from "@/components/LastSoldPrices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   CalendarClock, 
@@ -19,7 +20,8 @@ import {
   BadgeInfo,
   Loader2,
   ImageIcon,
-  FileText
+  FileText,
+  DollarSign
 } from "lucide-react";
 import {
   Dialog,
@@ -281,6 +283,10 @@ const CardDetail = () => {
                   <Tag className="mr-2 h-4 w-4" />
                   Value History
                 </TabsTrigger>
+                <TabsTrigger value="market" className="flex items-center">
+                  <DollarSign className="mr-2 h-4 w-4" />
+                  eBay Prices
+                </TabsTrigger>
                 {card.notes && (
                   <TabsTrigger value="notes" className="flex items-center">
                     <FileText className="mr-2 h-4 w-4" />
@@ -345,6 +351,10 @@ const CardDetail = () => {
                 />
               </TabsContent>
 
+              <TabsContent value="market">
+                <LastSoldPrices cardId={cardId} />
+              </TabsContent>
+              
               {card.notes && (
                 <TabsContent value="notes">
                   <div className="bg-gray-50 rounded-lg p-4">
