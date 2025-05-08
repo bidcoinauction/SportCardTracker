@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient"; 
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Check, AlertCircle, Upload, FileUp, ArrowRight, Loader2 } from "lucide-react";
+import { Check, AlertCircle, Upload, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 
@@ -16,14 +16,21 @@ export default function Import() {
   const [uploading, setUploading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [_, navigate] = useLocation();
 
   const importMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      return apiRequest("/api/import", {
+      const response = await fetch("/api/import", {
         method: "POST",
         body: formData
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Import failed");
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       setResults(data);

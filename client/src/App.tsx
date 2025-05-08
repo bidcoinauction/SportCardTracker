@@ -10,6 +10,7 @@ import Collection from "@/pages/Collection";
 import AddCard from "@/pages/AddCard";
 import CardDetail from "@/pages/CardDetail";
 import ValueTracker from "@/pages/ValueTracker";
+import Import from "@/pages/Import";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
         <Route path="/add-card" component={AddCard} />
         <Route path="/card/:id" component={CardDetail} />
         <Route path="/value-tracker" component={ValueTracker} />
+        <Route path="/import" component={Import} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

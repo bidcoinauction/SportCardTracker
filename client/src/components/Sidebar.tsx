@@ -11,7 +11,8 @@ import {
   CableCar,
   Goal,
   X,
-  LogOut
+  LogOut,
+  Upload
 } from "lucide-react";
 
 type SidebarProps = {
@@ -78,6 +79,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <NavItem to="/collection" icon={CreditCard} label="My Collection" />
             <NavItem to="/add-card" icon={PlusCircle} label="Add New Card" />
             <NavItem to="/value-tracker" icon={TrendingUp} label="Value Tracker" />
+            <NavItem to="/import" icon={Upload} label="Import Cards" />
           </ul>
         </div>
 
