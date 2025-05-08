@@ -99,19 +99,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
-      // Parse and validate the request data
+      // Check if this is a bulk import of multiple cards
+      if (req.body.cards && Array.isArray(req.body.cards)) {
+        const cardsToCreate = req.body.cards.map((card: any) => ({
+          playerName: card.playerName || "Unknown Player",
+          sport: card.sport?.toLowerCase() || "soccer",
+          year: Number(card.year) || new Date().getFullYear(),
+          condition: card.condition?.toLowerCase() || "new",
+          team: card.team || null,
+          brand: card.brand || null,
+          cardSet: card.cardSet || null,
+          cardNumber: card.cardNumber || null,
+          purchasePrice: "0",
+          currentValue: card.currentValue ? String(card.currentValue) : "0",
+          notes: card.notes || null,
+          frontImageUrl: card.frontImageUrl || null,
+          backImageUrl: card.backImageUrl || null
+        }));
+        
+        // Process and create each card
+        const createdCards = [];
+        for (const cardData of cardsToCreate) {
+          try {
+            const newCard = await storage.createCard(cardData);
+            createdCards.push(newCard);
+          } catch (error) {
+            console.error("Error creating card:", error);
+          }
+        }
+        
+        return res.status(201).json({ 
+          message: `Imported ${createdCards.length} of ${cardsToCreate.length} cards`,
+          imported: createdCards.length,
+          cards: createdCards
+        });
+      }
+      
+      // Single card creation
       const cardData = cardFormSchema.parse({
         ...req.body,
         year: Number(req.body.year),
         estimatedValue: Number(req.body.estimatedValue),
-        frontImageUrl: files.frontImage ? `/uploads/${files.frontImage[0].filename}` : undefined,
-        backImageUrl: files.backImage ? `/uploads/${files.backImage[0].filename}` : undefined,
+        frontImageUrl: files?.frontImage ? `/uploads/${files.frontImage[0].filename}` : undefined,
+        backImageUrl: files?.backImage ? `/uploads/${files.backImage[0].filename}` : undefined,
       });
       
       const newCard = await storage.createCard(cardData);
       res.status(201).json(newCard);
     } catch (err) {
       handleError(err, res);
+    }
+  });
+  
+  // POST import text endpoint for processing raw text data
+  app.post('/api/import/text', async (req: Request, res: Response) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ message: 'No text data provided' });
+      }
+      
+      // Split text into lines and process each one
+      const lines = text.split('\n').filter(line => line.trim().length > 0);
+      console.log(`Processing ${lines.length} lines of text`);
+      
+      const cards = lines.map(line => {
+        // Handle common patterns in card descriptions
+        const yearMatch = line.match(/\b(19|20)\d{2}\b/);
+        const year = yearMatch ? parseInt(yearMatch[0]) : new Date().getFullYear();
+        
+        // Look for condition terms
+        let condition = "new";
+        const conditionTerms = {
+          mint: /\bmint\b|\bpsa\s*10\b|\bgem\s*mt\b/i,
+          nearMint: /\bnear\s*mint\b|\bpsa\s*9\b|\bnm\b|\bnm-mt\b/i,
+          excellent: /\bexcellent\b|\bpsa\s*[78]\b|\bex\b/i,
+          veryGood: /\bvery\s*good\b|\bpsa\s*[56]\b|\bvg\b/i,
+          good: /\bgood\b|\bpsa\s*[34]\b/i,
+          fair: /\bfair\b|\bpsa\s*[12]\b/i,
+          poor: /\bpoor\b|\bpsa\s*0\b/i
+        };
+        
+        for (const [cond, regex] of Object.entries(conditionTerms)) {
+          if (regex.test(line)) {
+            condition = cond;
+            break;
+          }
+        }
+        
+        // Try to extract player name - look for capitalized words
+        const nameMatch = line.match(/([A-Z][a-z]+\s+[A-Z][a-z]+)/);
+        const playerName = nameMatch ? nameMatch[0] : "Unknown Player";
+        
+        // Try to determine brand and card set
+        const brandMatch = line.match(/\b(Topps|Panini|Fleer|Upper Deck|Bowman|Donruss)\b/i);
+        const brand = brandMatch ? brandMatch[0] : null;
+        
+        // Look for set names that usually follow brand
+        const setMatch = brandMatch && line.match(new RegExp(`${brandMatch[0]}\\s+([A-Za-z]+)`, 'i'));
+        const cardSet = setMatch ? setMatch[1] : null;
+        
+        // Look for card numbers usually indicated with #
+        const cardNumberMatch = line.match(/#\s*(\d+)/);
+        const cardNumber = cardNumberMatch ? cardNumberMatch[1] : null;
+        
+        // Determine sport based on keywords
+        let sport = "soccer";  // Default for your use case
+        const sportKeywords = {
+          basketball: /basketball|nba|hoops/i,
+          baseball: /baseball|mlb|diamond/i,
+          football: /football|nfl|gridiron/i,
+          hockey: /hockey|nhl|puck/i,
+          soccer: /soccer|fifa|mls/i
+        };
+        
+        for (const [sportName, regex] of Object.entries(sportKeywords)) {
+          if (regex.test(line)) {
+            sport = sportName;
+            break;
+          }
+        }
+        
+        return {
+          playerName,
+          sport,
+          year,
+          condition,
+          brand,
+          cardSet,
+          cardNumber,
+          team: null,
+          purchasePrice: "0",
+          currentValue: "0",
+          notes: line.trim(),
+          frontImageUrl: null,
+          backImageUrl: null
+        };
+      });
+      
+      // Save all cards
+      const results = await Promise.all(
+        cards.map(async (card) => {
+          try {
+            const newCard = await storage.createCard(card);
+            return { success: true, data: newCard };
+          } catch (error) {
+            console.error("Error creating card from text:", error);
+            return { 
+              success: false, 
+              error: `Failed to create card: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              data: card
+            };
+          }
+        })
+      );
+      
+      const successful = results.filter(r => r.success).length;
+      
+      res.json({
+        message: `Successfully imported ${successful} of ${cards.length} cards`,
+        imported: successful,
+        results
+      });
+    } catch (error) {
+      console.error("Error in text import:", error);
+      res.status(500).json({ message: "Failed to import cards from text" });
     }
   });
 
@@ -248,10 +401,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Found ${records.length} records in uploaded file`);
       
+      // Log a few sample records to debug
+      if (records.length > 0) {
+        console.log("Sample record:", JSON.stringify(records[0]));
+      }
+      
       // Filter out empty rows or rows without essential data
       records = records.filter(record => {
-        return (record["Player Name"] || record["Card Name"]) && 
-               (record["IMAGE URL"] !== undefined || record["Card Number"] !== undefined);
+        return record && (
+          (record["Player Name"] || record["Card Name"]) || 
+          (record["IMAGE URL"] !== undefined && record["Card Number"] !== undefined)
+        );
       });
       
       console.log(`After filtering, ${records.length} valid records remain`);
@@ -260,20 +420,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cardRecords = records.map(record => {
         const mappedRecord: any = {};
         
+        // Debug the raw record
+        console.log("Processing record:", JSON.stringify(record));
+        
         // Ensure we have a player name - prefer Player Name field, fallback to Card Name
-        if (record["Player Name"]) {
-          mappedRecord.playerName = record["Player Name"];
-        } else if (record["Card Name"]) {
-          // Extract player name from card name if no player name exists
-          const cardName = record["Card Name"].toString();
-          // Look for a name pattern in the card name
-          const nameMatch = cardName.match(/(?:.*?)([A-Z][a-z]+ [A-Z][a-z]+)/);
+        if (record["Player Name"] && record["Player Name"].trim()) {
+          mappedRecord.playerName = record["Player Name"].trim();
+        } else if (record["Card Name"] && record["Card Name"].trim()) {
+          // Extract player name from card name
+          const cardName = record["Card Name"].toString().trim();
+          
+          // Try to extract player name from card name patterns
+          // First check if there's a pattern like "Card Set Name Player Name Card Details"
+          const nameMatch = cardName.match(/(?:.*?)((?:[A-Z][a-z]+ )+[A-Z][a-z]+)/);
           if (nameMatch && nameMatch[1]) {
-            mappedRecord.playerName = nameMatch[1];
+            mappedRecord.playerName = nameMatch[1].trim();
           } else {
             // Fallback: just use the card name
             mappedRecord.playerName = cardName;
           }
+        } else {
+          // Last resort: use a default name
+          mappedRecord.playerName = "Unknown Player";
         }
         
         // Direct mapping of standard fields
@@ -283,29 +451,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mappedRecord.cardSet = record["Card Set"] || null;
         mappedRecord.cardNumber = record["Card Number"] || null;
         mappedRecord.condition = record["Condition"] ? record["Condition"].toLowerCase() : "new";
-        mappedRecord.notes = record["Features"] || null;
+        mappedRecord.notes = record["Features"] || record["Card Name"] || null;
         
         // Handle image URLs - properly split the pipe-separated values
         if (record["IMAGE URL"]) {
-          const imageUrl = record["IMAGE URL"].toString();
-          const imageUrls = imageUrl.split('|').map(url => url.trim());
-          
-          if (imageUrls.length > 0 && imageUrls[0]) {
-            mappedRecord.frontImageUrl = imageUrls[0];
+          try {
+            const imageUrl = record["IMAGE URL"].toString();
+            console.log("Raw image URL field:", imageUrl);
+            
+            // Images could be separated by | or ||
+            // First try to split by pipe character
+            let imageUrls: string[] = [];
+            
+            if (imageUrl.includes('|')) {
+              // Split by pipe character and handle potential whitespace
+              imageUrls = imageUrl.split('|').map(url => url.trim()).filter(url => url.length > 0);
+              console.log("Split image URLs by pipe:", imageUrls);
+            } else {
+              // If there's no pipe, treat as a single URL
+              imageUrls = [imageUrl.trim()];
+            }
+            
+            // Log all extracted URLs
+            console.log(`Found ${imageUrls.length} image URLs:`, imageUrls);
+            
+            // Assign front and back image URLs
+            if (imageUrls.length > 0 && imageUrls[0]) {
+              mappedRecord.frontImageUrl = imageUrls[0];
+              console.log(`Front image URL: ${mappedRecord.frontImageUrl}`);
+            }
+            
+            if (imageUrls.length > 1 && imageUrls[1]) {
+              mappedRecord.backImageUrl = imageUrls[1];
+              console.log(`Back image URL: ${mappedRecord.backImageUrl}`);
+            }
+          } catch (error) {
+            console.error("Error processing image URLs:", error);
           }
-          
-          if (imageUrls.length > 1 && imageUrls[1]) {
-            mappedRecord.backImageUrl = imageUrls[1];
+        }
+        
+        // Look for additional image URL fields in case they're split across columns
+        const possibleImageFields = ["Image URL", "IMAGE URL", "Front Image URL", "Back Image URL", "Front Image", "Back Image"];
+        for (const fieldName of possibleImageFields) {
+          if (record[fieldName] && typeof record[fieldName] === 'string' && record[fieldName].trim().length > 0) {
+            const url = record[fieldName].trim();
+            
+            // If it contains http:// or https://, it's likely a URL
+            if (url.includes('http://') || url.includes('https://')) {
+              if (fieldName.toLowerCase().includes('front') || !mappedRecord.frontImageUrl) {
+                mappedRecord.frontImageUrl = url;
+                console.log(`Found front image in field ${fieldName}: ${url}`);
+              } else if (fieldName.toLowerCase().includes('back') && !mappedRecord.backImageUrl) {
+                mappedRecord.backImageUrl = url;
+                console.log(`Found back image in field ${fieldName}: ${url}`);
+              }
+            }
           }
         }
         
         // Handle season/year conversion - extract just the first year from ranges like 2023-2024
         if (record["Season"]) {
-          const yearMatch = record["Season"].toString().match(/(\d{4})/);
-          if (yearMatch && yearMatch[1]) {
-            mappedRecord.year = parseInt(yearMatch[1]);
-          } else {
-            mappedRecord.year = new Date().getFullYear(); // Default to current year if format is unexpected
+          try {
+            const yearStr = record["Season"].toString();
+            const yearMatch = yearStr.match(/(\d{4})/);
+            if (yearMatch && yearMatch[1]) {
+              mappedRecord.year = parseInt(yearMatch[1]);
+            } else {
+              mappedRecord.year = new Date().getFullYear(); // Default to current year if format is unexpected
+            }
+          } catch (error) {
+            console.error("Error parsing year:", error);
+            mappedRecord.year = new Date().getFullYear();
           }
         } else {
           mappedRecord.year = new Date().getFullYear(); // Default to current year if missing
