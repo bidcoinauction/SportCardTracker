@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { getSportSpecificImage, getRandomCardImage } from "@/lib/cardImages";
 
 type CardItemProps = {
   card: Card;
@@ -98,15 +99,24 @@ const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemPro
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative">
-        <div className="w-full h-48 bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center">
+        <div className="w-full h-48 bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
           <img
             src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"}
             alt={`${card.playerName} ${card.sport} Card`}
             className="w-full h-48 object-cover"
             onError={(e) => {
-              // If image fails to load, replace with a generated card-like placeholder
+              // If image fails to load, replace with a sport-specific or generic card placeholder
               e.currentTarget.onerror = null;
-              e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Sports Card')}`;
+              
+              // Try to get a sport-specific image
+              const sportImage = getSportSpecificImage(card.sport);
+              
+              if (sportImage) {
+                e.currentTarget.src = sportImage;
+              } else {
+                // Fall back to a placeholder with the player name
+                e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Sports Card')}`;
+              }
             }}
           />
         </div>

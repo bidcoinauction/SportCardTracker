@@ -230,7 +230,22 @@ const CardDetail = () => {
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
+                  
+                  // Import the getSportSpecificImage function
+                  import('@/lib/cardImages').then(({ getSportSpecificImage }) => {
+                    // Try to get a sport-specific image
+                    const sportImage = getSportSpecificImage(card.sport);
+                    
+                    if (sportImage) {
+                      e.currentTarget.src = sportImage;
+                    } else {
+                      // Fall back to a placeholder with the player name
+                      e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
+                    }
+                  }).catch(() => {
+                    // If module import fails, use generic placeholder
+                    e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Card Front')}`;
+                  });
                 }}
               />
             </div>
