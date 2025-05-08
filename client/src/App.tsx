@@ -14,17 +14,15 @@ import Import from "@/pages/Import";
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/collection" component={Collection} />
-        <Route path="/add-card" component={AddCard} />
-        <Route path="/card/:id" component={CardDetail} />
-        <Route path="/value-tracker" component={ValueTracker} />
-        <Route path="/import" component={Import} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/" component={Dashboard} />
+      <Route path="/collection" component={Collection} />
+      <Route path="/add-card" component={AddCard} />
+      <Route path="/card/:id" component={CardDetail} />
+      <Route path="/value-tracker" component={ValueTracker} />
+      <Route path="/import" component={Import} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
@@ -33,7 +31,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <Layout>
+          <Router />
+        </Layout>
       </TooltipProvider>
     </QueryClientProvider>
   );

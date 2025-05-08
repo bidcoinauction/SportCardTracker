@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Check, AlertCircle, Upload, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import Layout from "@/components/Layout";
 
 export default function Import() {
   const [file, setFile] = useState<File | null>(null);
@@ -92,25 +91,24 @@ export default function Import() {
   };
 
   return (
-    <Layout>
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Import Cards</h1>
-            <p className="text-muted-foreground">
-              Import your card collection from a CSV or Excel file
-            </p>
-          </div>
+    <div className="container mx-auto py-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Import Cards</h1>
+          <p className="text-muted-foreground">
+            Import your card collection from a CSV or Excel file
+          </p>
         </div>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload File</CardTitle>
-              <CardDescription>
-                Select a CSV or Excel file containing your card collection.
-              </CardDescription>
-            </CardHeader>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Upload File</CardTitle>
+            <CardDescription>
+              Select a CSV or Excel file containing your card collection.
+            </CardDescription>
+          </CardHeader>
             <CardContent>
               <div className="grid gap-4">
                 <div className="grid gap-2">
@@ -241,7 +239,6 @@ export default function Import() {
             </Card>
           </div>
         )}
-      </div>
-    </Layout>
+    </div>
   );
 }
