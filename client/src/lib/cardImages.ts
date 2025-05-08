@@ -2,38 +2,61 @@
  * Card image utilities
  */
 
-// Default placeholder images for each sport type
+// Default placeholder images for each sport type using CSS gradient backgrounds
 const sportSpecificPlaceholders: Record<string, string> = {
-  basketball: "https://via.placeholder.com/300x400/3f94ea/ffffff?text=Basketball+Card",
-  baseball: "https://via.placeholder.com/300x400/43a047/ffffff?text=Baseball+Card",
-  football: "https://via.placeholder.com/300x400/e53935/ffffff?text=Football+Card",
-  soccer: "https://via.placeholder.com/300x400/673ab7/ffffff?text=Soccer+Card",
-  hockey: "https://via.placeholder.com/300x400/607d8b/ffffff?text=Hockey+Card",
+  basketball: "linear-gradient(135deg, #3f94ea, #1565c0)",
+  baseball: "linear-gradient(135deg, #43a047, #2e7d32)",
+  football: "linear-gradient(135deg, #e53935, #c62828)",
+  soccer: "linear-gradient(135deg, #673ab7, #4527a0)",
+  hockey: "linear-gradient(135deg, #607d8b, #455a64)",
 };
 
-// Random card placeholder images
-const cardPlaceholders = [
-  "https://via.placeholder.com/300x400/4a148c/ffffff?text=Sports+Card",
-  "https://via.placeholder.com/300x400/1a237e/ffffff?text=Trading+Card",
-  "https://via.placeholder.com/300x400/01579b/ffffff?text=Collectible+Card",
-  "https://via.placeholder.com/300x400/004d40/ffffff?text=Card+Collection",
-  "https://via.placeholder.com/300x400/bf360c/ffffff?text=Sports+Card",
-];
+// Generic gradient for unknown sports
+const defaultGradient = "linear-gradient(135deg, #9e9e9e, #616161)";
+
+/**
+ * Creates a data URL for an SVG image with gradient background
+ * This doesn't rely on external services that might fail
+ */
+export function createCardImageSvg(playerName: string, sport: string, year?: string | number): string {
+  const normalizedSport = sport?.toLowerCase().trim() || '';
+  const gradient = sportSpecificPlaceholders[normalizedSport] || defaultGradient;
+  
+  // Clean the player name for display
+  const displayName = playerName?.replace(/\+/g, ' ').trim() || 'Sports Card';
+  const displayYear = year || '';
+  
+  // Create an SVG with gradient background and text
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+      <defs>
+        <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${gradient.split(',')[0].replace('linear-gradient(135deg, ', '')}"/>
+          <stop offset="100%" style="stop-color:${gradient.split(',')[1].replace(')', '')}"/>
+        </linearGradient>
+      </defs>
+      <rect width="300" height="400" rx="15" ry="15" fill="url(#cardGradient)"/>
+      <text x="150" y="200" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">${displayName}</text>
+      <text x="150" y="230" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="white">${normalizedSport.charAt(0).toUpperCase() + normalizedSport.slice(1)}</text>
+      <text x="150" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="white">${displayYear}</text>
+    </svg>
+  `;
+  
+  // Convert the SVG to a data URL
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
 
 /**
  * Get a sport-specific placeholder image
  */
-export function getSportSpecificImage(sport: string): string | null {
-  if (!sport) return null;
-  
-  const normalizedSport = sport.toLowerCase().trim();
-  return sportSpecificPlaceholders[normalizedSport] || null;
+export function getSportSpecificImage(sport: string, playerName = '', year = ''): string {
+  if (!sport) return createCardImageSvg('Sports Card', 'unknown');
+  return createCardImageSvg(playerName, sport, year);
 }
 
 /**
- * Get a random card placeholder image
+ * Get a random card placeholder with the card's details
  */
-export function getRandomCardImage(): string {
-  const randomIndex = Math.floor(Math.random() * cardPlaceholders.length);
-  return cardPlaceholders[randomIndex];
+export function getRandomCardImage(playerName: string, sport = ''): string {
+  return createCardImageSvg(playerName, sport || 'unknown');
 }

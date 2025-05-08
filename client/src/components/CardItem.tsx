@@ -114,17 +114,12 @@ const CardItem = ({
       <div className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow duration-300 flex">
         <div className="relative w-24 h-24 flex-shrink-0">
           <img
-            src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"}
+            src={card.frontImageUrl || getSportSpecificImage(card.sport, card.playerName, card.year?.toString())}
             alt={`${card.playerName} ${card.sport} Card`}
             className="w-24 h-24 object-cover"
             onError={(e) => {
               e.currentTarget.onerror = null;
-              const sportImage = getSportSpecificImage(card.sport);
-              if (sportImage) {
-                e.currentTarget.src = sportImage;
-              } else {
-                e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Sports Card')}`;
-              }
+              e.currentTarget.src = getSportSpecificImage(card.sport, card.playerName, card.year?.toString());
             }}
           />
           <div className={cn("absolute top-1 left-1 rounded-full p-1 scale-75", getSportColor(card.sport))}>
@@ -201,22 +196,13 @@ const CardItem = ({
       <div className="relative">
         <div className="w-full h-48 bg-gradient-to-tr from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
           <img
-            src={card.frontImageUrl || "https://via.placeholder.com/300x400?text=No+Image"}
+            src={card.frontImageUrl || getSportSpecificImage(card.sport, card.playerName, card.year?.toString())}
             alt={`${card.playerName} ${card.sport} Card`}
             className="w-full h-48 object-cover"
             onError={(e) => {
-              // If image fails to load, replace with a sport-specific or generic card placeholder
+              // If image fails to load, replace with a sport-specific SVG
               e.currentTarget.onerror = null;
-              
-              // Try to get a sport-specific image
-              const sportImage = getSportSpecificImage(card.sport);
-              
-              if (sportImage) {
-                e.currentTarget.src = sportImage;
-              } else {
-                // Fall back to a placeholder with the player name
-                e.currentTarget.src = `https://via.placeholder.com/300x400/f5f5f5/666666?text=${encodeURIComponent(card.playerName || 'Sports Card')}`;
-              }
+              e.currentTarget.src = getSportSpecificImage(card.sport, card.playerName, card.year?.toString());
             }}
           />
         </div>
