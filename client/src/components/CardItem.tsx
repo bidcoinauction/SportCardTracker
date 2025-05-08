@@ -136,8 +136,10 @@ const CardItem = ({
           <div>
             <div className="flex justify-between items-start">
               <h4 className="font-bold text-gray-800 text-sm">{card.playerName}</h4>
-              <div className="bg-accent text-white rounded-full px-2 py-0.5 text-xs font-medium">
-                ${typeof card.currentValue === 'number' ? card.currentValue.toLocaleString() : card.currentValue || 0}
+              <div className="bg-gradient-to-r from-accent to-accent-foreground text-white rounded-md px-2 py-1 text-xs font-bold shadow-sm">
+                ${typeof card.currentValue === 'number' 
+                  ? card.currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) 
+                  : card.currentValue || '0.00'}
               </div>
             </div>
             <p className="text-xs text-gray-600 mb-1">
@@ -218,8 +220,10 @@ const CardItem = ({
             }}
           />
         </div>
-        <div className="absolute top-2 right-2 bg-accent text-white rounded-full px-2 py-1 text-xs font-medium">
-          ${typeof card.currentValue === 'number' ? card.currentValue.toLocaleString() : card.currentValue || 0}
+        <div className="absolute top-2 right-2 bg-gradient-to-r from-accent to-accent-foreground text-white rounded-lg px-3 py-1.5 text-sm font-bold shadow-md transform hover:scale-105 transition-transform">
+          ${typeof card.currentValue === 'number' 
+            ? card.currentValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) 
+            : card.currentValue || '0.00'}
         </div>
         <div className={cn("absolute top-2 left-2 rounded-full p-1.5", getSportColor(card.sport))}>
           {getSportIcon(card.sport)}

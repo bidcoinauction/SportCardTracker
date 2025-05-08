@@ -138,9 +138,15 @@ export default function PriceResearchModal({
     }).format(date);
   };
 
-  // Update card value with the average price
-  const updateCardValue = async () => {
-    if (!card || !priceData) return;
+  // Update card value with the average price (default)
+  const updateCardValue = () => {
+    if (!priceData) return;
+    updateCardValueWithPrice(priceData.averagePrice);
+  };
+  
+  // Generic function to update card value with any price
+  const updateCardValueWithPrice = async (price: number) => {
+    if (!card || !price) return;
     
     try {
       const response = await fetch(`/api/cards/${card.id}`, {
@@ -149,7 +155,7 @@ export default function PriceResearchModal({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          currentValue: priceData.averagePrice,
+          currentValue: price,
           lastValueUpdate: new Date().toISOString(),
         }),
       });
@@ -158,9 +164,14 @@ export default function PriceResearchModal({
         throw new Error("Failed to update card value");
       }
       
+      // Invalidate any cached card data
+      queryClient.invalidateQueries({ queryKey: ["/api/cards"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cards", card.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      
       toast({
         title: "Card Value Updated",
-        description: `Updated ${card.playerName} value to ${formatPrice(priceData.averagePrice)}`,
+        description: `Updated ${card.playerName} value to ${formatPrice(price)}`,
       });
       
       onOpenChange(false);
@@ -266,10 +277,33 @@ export default function PriceResearchModal({
                 </CardContent>
                 <CardFooter className="pt-0">
                   {card && (
-                    <Button onClick={updateCardValue} className="w-full">
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                      Update Card Value to {formatPrice(priceData.averagePrice)}
-                    </Button>
+                    <div className="w-full space-y-2">
+                      <Button 
+                        onClick={updateCardValue} 
+                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                      >
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Update to Average: {formatPrice(priceData.averagePrice)}
+                      </Button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          onClick={() => updateCardValueWithPrice(priceData.medianPrice)} 
+                          variant="outline" 
+                          className="border-primary text-primary hover:bg-primary/10"
+                        >
+                          <DollarSign className="mr-1 h-4 w-4" />
+                          Use Median
+                        </Button>
+                        <Button 
+                          onClick={() => updateCardValueWithPrice(priceData.maxPrice)} 
+                          variant="outline" 
+                          className="border-accent text-accent hover:bg-accent/10"
+                        >
+                          <TrendingUp className="mr-1 h-4 w-4" />
+                          Use Highest
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </CardFooter>
               </CardUI>
