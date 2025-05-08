@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient"; 
+import { queryClient } from "@/lib/queryClient"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Check, AlertCircle, Upload, ArrowRight, Loader2 } from "lucide-react";
+import { Check, AlertCircle, Upload, ArrowRight, Loader2, FileUp, Package, Workflow } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ImportModal from "@/components/ImportModal";
 
 export default function Import() {
   const [file, setFile] = useState<File | null>(null);
@@ -16,6 +17,7 @@ export default function Import() {
   const [results, setResults] = useState<any>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const importMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -99,7 +101,25 @@ export default function Import() {
             Import your card collection from a CSV or Excel file
           </p>
         </div>
+        <Button onClick={() => setImportModalOpen(true)} className="gap-2">
+          <FileUp className="w-4 h-4" />
+          Advanced Import
+        </Button>
       </div>
+      
+      {/* Advanced Import Modal */}
+      <ImportModal 
+        open={importModalOpen} 
+        onOpenChange={setImportModalOpen} 
+        onSuccess={() => {
+          setImportModalOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["/api/cards"] });
+          toast({
+            title: "Import completed",
+            description: "Cards were successfully imported to your collection.",
+          });
+        }} 
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
