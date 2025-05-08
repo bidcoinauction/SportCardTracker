@@ -104,7 +104,7 @@ const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemPro
           className="w-full h-48 object-cover"
         />
         <div className="absolute top-2 right-2 bg-accent text-white rounded-full px-2 py-1 text-xs font-medium">
-          ${typeof card.estimatedValue === 'number' ? card.estimatedValue.toLocaleString() : card.estimatedValue}
+          ${typeof card.currentValue === 'number' ? card.currentValue.toLocaleString() : card.currentValue || 0}
         </div>
         <div className={cn("absolute top-2 left-2 rounded-full p-1.5", getSportColor(card.sport))}>
           {getSportIcon(card.sport)}
@@ -113,21 +113,21 @@ const CardItem = ({ card, onEdit, onView, onDelete, onUpdateValue }: CardItemPro
       <div className="p-4">
         <h4 className="font-bold text-gray-800">{card.playerName}</h4>
         <p className="text-sm text-gray-600 mb-2">
-          {card.team} · {card.year} {card.brandSet}
+          {card.team || "N/A"} · {card.year || "N/A"} {card.brand ? (card.cardSet ? `${card.brand} ${card.cardSet}` : card.brand) : ""}
         </p>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full mr-1">
               {getConditionLabel(card.condition)}
             </span>
-            {card.grade && (
+            {card.cardNumber && (
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                {card.grade}
+                #{card.cardNumber}
               </span>
             )}
           </div>
           <div className="text-xs text-gray-500">
-            Added {card.addedDate ? getTimeAgo(card.addedDate) : "recently"}
+            Added {card.createdAt ? getTimeAgo(card.createdAt) : "recently"}
           </div>
         </div>
       </div>

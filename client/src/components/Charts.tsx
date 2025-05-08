@@ -266,7 +266,7 @@ export const DistributionCharts = ({
                 dataKey="totalValue"
                 nameKey="sport"
                 label={({ sport, percentage }) => 
-                  `${formatSport(sport)} ${percentage.toFixed(0)}%`
+                  `${formatSport(sport)} ${(percentage || 0).toFixed(0)}%`
                 }
               >
                 {data.map((entry, index) => (
@@ -277,7 +277,7 @@ export const DistributionCharts = ({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => [`$${value.toLocaleString()}`, "Value"]}
+                formatter={(value) => [`$${(value || 0).toLocaleString()}`, "Value"]}
                 labelFormatter={(name) => formatSport(name)}
               />
             </PieChart>
@@ -295,14 +295,14 @@ export const DistributionCharts = ({
                   {formatSport(category.sport)}
                 </span>
                 <span className="text-sm font-medium text-gray-700">
-                  ${category.totalValue.toLocaleString()}
+                  ${(category.totalValue || 0).toLocaleString()}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
                   className="h-2.5 rounded-full"
                   style={{
-                    width: `${category.percentage}%`,
+                    width: `${category.percentage || 0}%`,
                     backgroundColor: COLORS[index % COLORS.length],
                   }}
                 ></div>
